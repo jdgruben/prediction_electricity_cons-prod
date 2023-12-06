@@ -235,10 +235,5 @@ if st.button('Predict'):
 
 
 
-# Placeholder for map of Estonia
-view_state = pdk.ViewState(latitude=58.5953, longitude=25.0136, zoom=7)
-
-
-
 
 
