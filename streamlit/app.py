@@ -141,7 +141,7 @@ def create_plotly_chart(y_true, y_pred, title, y_label):
         y=y_true['target'],
         mode='lines',
         name='Actual',
-        line=dict(color='blue')  
+        line=dict(color='green')  
     ))
 
  
