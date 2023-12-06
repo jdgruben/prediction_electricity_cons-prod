@@ -50,13 +50,24 @@ def load_y_true():
     y_true['datetime'] = pd.to_datetime(y_true['datetime'])
     return y_true
 
+# County and product type mappings
+county_name_mapping = {
+    "0": "Harjumaa", "1": "Hiiumaa", "2": "Ida-Virumaa", "3": "Järvamaa",
+    "4": "Jõgevamaa", "5": "Lääne-Virumaa", "6": "Läänemaa", "7": "Pärnumaa",
+    "8": "Põlvamaa", "9": "Raplamaa", "10": "Saaremaa", "11": "Tartumaa",
+    "13": "Valgamaa", "14": "Viljandimaa", "15": "Võrumaa"
+}
+product_type_mapping = {'0': "Combined", '1': "Fixed", '2': "General service", '3': "Spot"}
+
 # ------------------------------------------------------------------------------------------
 #                               Helper Functions
 # ------------------------------------------------------------------------------------------
 
-def get_county_number_from_name(county_name, county_name_mapping):
-    """Get county number from name."""
-    return county_name_mapping.get(county_name)
+def get_county_number_from_name(county_name):
+    for num, name in county_name_mapping.items():
+        if name == county_name:
+            return num
+    return None
 
 def get_product_type_number(selected_product_name, product_type_mapping):
     """Get product type number from name."""
@@ -147,15 +158,6 @@ def create_plotly_chart(y_true, y_pred, title, y_label):
 pred_id_mapping = load_pred_id_mapping()
 y_true = load_y_true()
 
-# County and product type mappings
-county_name_mapping = {
-    "0": "Harjumaa", "1": "Hiiumaa", "2": "Ida-Virumaa", "3": "Järvamaa",
-    "4": "Jõgevamaa", "5": "Lääne-Virumaa", "6": "Läänemaa", "7": "Pärnumaa",
-    "8": "Põlvamaa", "9": "Raplamaa", "10": "Saaremaa", "11": "Tartumaa",
-    "13": "Valgamaa", "14": "Viljandimaa", "15": "Võrumaa"
-}
-product_type_mapping = {'0': "Combined", '1': "Fixed", '2': "General service", '3': "Spot"}
-
 # Input widgets for predictions
 col1, col2, col3, col4 = st.columns([3, 3, 3, 3])
 
@@ -170,9 +172,9 @@ with col3:
     county_name = st.selectbox('Select County', list(county_name_mapping.values()))
     
 with col4:
-    county_number = get_county_number_from_name(county_name, county_name_mapping)
+    county_number = get_county_number_from_name(county_name)
     product_types = get_available_product_types(county_number, is_business)
-    selected_product_type = st.selectbox('Select Product Type', product_types) # Update product types based on selected county and business status
+    selected_product_type = st.selectbox('Select Product Type', product_types)
 
 
 # ------------------------------------------------------------------------------------------
@@ -216,5 +218,3 @@ if st.button('Predict'):
 
     else:
         st.error('Please select both a start and an end date.')
-
-
