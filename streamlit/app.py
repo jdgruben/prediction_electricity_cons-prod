@@ -161,6 +161,7 @@ col1, col2, col3, col4 = st.columns([3, 3, 3, 3])
 
 with col1:
     date_range = st.date_input('Select Date Range', [datetime.date(2023, 5, 19), datetime.date(2023, 5, 20)])
+    
 with col2:
     is_business = st.selectbox('Is Business?', ['Yes', 'No'])
 
@@ -169,7 +170,7 @@ with col3:
     county_name = st.selectbox('Select County', list(county_name_mapping.values()))
     
 with col4:
-    county_number = get_county_number_from_name(county_name)
+    county_number = get_county_number_from_name(county_name, county_name_mapping)
     product_types = get_available_product_types(county_number, is_business)
     selected_product_type = st.selectbox('Select Product Type', product_types) # Update product types based on selected county and business status
 
