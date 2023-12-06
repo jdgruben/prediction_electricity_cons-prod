@@ -39,7 +39,7 @@ st.title(':zap: Electricity Consumption and Production Prediction :zap:')
 #########################################################
 # Load prediction unit ID mapping
 def load_pred_id_mapping():
-    with open('streamlit/data/mapping_prediction_unit_id.json', 'r') as file:
+    with open('data/mapping_prediction_unit_id.json', 'r') as file:
         pred_id_mapping = json.load(file)
     pred_id_mapping = pd.DataFrame.from_dict(pred_id_mapping, orient='index')
     return pred_id_mapping
