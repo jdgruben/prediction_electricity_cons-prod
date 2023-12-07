@@ -218,7 +218,7 @@ col1, col2, col3, col4 = st.columns([3, 3, 3, 3])
 # Input widgets for prediction
 with col1:
     date_range = st.date_input('Select Date Range', [datetime.date(2023, 5, 19), datetime.date(2023, 5, 20)])
-    selected_model = st.selectbox('Select Prediction Model', ['Auto-SARIMA', 'Prophet'])
+    selected_model = st.selectbox('Select Prediction Model', ['Prophet', 'Auto-SARIMA'])
 
 with col2:
     is_business = st.selectbox('Is Business?', ['Yes', 'No'])
