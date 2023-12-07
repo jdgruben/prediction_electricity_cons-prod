@@ -267,7 +267,7 @@ if st.button('Predict'):
 
             # Create charts for actual vs predicted consumption and production
             fig1 = create_plotly_chart(consumption_data, forecast_conso, 'Graph for Consumption', 'Consumption', showlegend=False)
-            fig2 = create_plotly_chart(production_data, forecast_prod, 'Graph for Production', 'Production')
+            fig2 = create_plotly_chart(production_data, forecast_prod, 'Graph for Production', 'Production',showlegend=True)
 
             col1, col2 = st.columns([6, 6])
 
