@@ -4,6 +4,8 @@ import json
 import datetime
 import time
 import plotly.graph_objects as go
+import requests
+
 
 #####################################################
 # STYLING AND PAGE CONFIGURATION
@@ -107,15 +109,45 @@ def get_available_product_types(county_number, is_business):
     product_type_numbers = filtered_df['product_type'].unique().tolist()
     return [product_type_mapping[str(num)] for num in product_type_numbers]
 
-def predict_electricity(start_date, end_date, prediction_unit_id):
+def predict_electricity(start_date, end_date, prediction_unit_id, model):
     """Function to predict electricity consumption and production."""
-    pass
+    # Fetch forecast data from the API
+    forecast_conso, forecast_prod = fetch_forecast_from_api(prediction_unit_id, model)
+    return forecast_conso, forecast_prod
+
+
+####################################################
+# API CALL
+#################################################### 
+
+def fetch_forecast_from_api(prediction_unit_id, model):
+    """Fetch forecast data from the API based on the prediction unit ID and model."""
+    api_url = f"https://enefitservice-gipozgf35q-ew.a.run.app/predict?PUID={prediction_unit_id}"
+    response = requests.get(api_url)
+    if response.status_code == 200:
+        data = response.json()
+        # st.write("API Response:", data)
+        try:
+            if model == 'Prophet':
+                return pd.DataFrame(data['prophet_conso'][str(prediction_unit_id)]), \
+                       pd.DataFrame(data['prophet_prod'][str(prediction_unit_id)])
+            elif model == 'Auto-SARIMA':
+                conso_df = pd.DataFrame({'ds': data['forecast_conso']['ds'], 'yhat': data['forecast_conso']['MSTL']})
+                prod_df = pd.DataFrame({'ds': data['forecast_prod']['ds'], 'yhat': data['forecast_prod']['MSTL']})
+                return conso_df, prod_df
+        except KeyError as e:
+            st.error(f"KeyError occurred: {e}")
+            return None, None
+    else:
+        st.error("Failed to fetch data from API")
+        return None, None
+
 
 #####################################################
 # PLOTTING FUNCTIONS
 #####################################################
 
-def create_plotly_chart(y_true, y_pred, title, y_label):
+def create_plotly_chart(y_true, y_pred, title, y_label, showlegend=True):
     """Create a Plotly chart for visualizing actual and predicted values."""
     fig = go.Figure()
 
@@ -127,10 +159,11 @@ def create_plotly_chart(y_true, y_pred, title, y_label):
         line=dict(color='darkblue')  
     ))
 
+    # Plot predicted values
     if y_pred is not None:
         fig.add_trace(go.Scatter(
-            x=y_pred['datetime'], 
-            y=y_pred['target'],
+            x=y_pred['ds'],  
+            y=y_pred['yhat'], 
             mode='lines',
             name='Predicted',
             line=dict(color='red')  
@@ -154,6 +187,7 @@ def create_plotly_chart(y_true, y_pred, title, y_label):
             linewidth=2,
             ticks='outside',
             tickfont=dict(family='Arial', size=12, color='black'),
+            title_font=dict(color="black"),
             tickmode='auto',
             tickformat='%d %b',
         ),
@@ -162,10 +196,12 @@ def create_plotly_chart(y_true, y_pred, title, y_label):
             zeroline=False,
             showline=False,
             showticklabels=True,
+            title_font=dict(color="black"),
+            tickfont=dict(family='Arial', size=12, color='black')
         ),
         autosize=True,
         margin=dict(autoexpand=True, l=100, r=100, t=110),
-        showlegend=True
+        showlegend=showlegend
     )
 
     fig.update_xaxes(tickangle=-45)
@@ -182,6 +218,7 @@ col1, col2, col3, col4 = st.columns([3, 3, 3, 3])
 # Input widgets for prediction
 with col1:
     date_range = st.date_input('Select Date Range', [datetime.date(2023, 5, 19), datetime.date(2023, 5, 20)])
+    selected_model = st.selectbox('Select Prediction Model', ['Auto-SARIMA', 'Prophet'])
 
 with col2:
     is_business = st.selectbox('Is Business?', ['Yes', 'No'])
@@ -198,32 +235,47 @@ with col4:
 if st.button('Predict'):
     if len(date_range) == 2:
         prediction_unit_id = find_pred_id(is_business, county_number, selected_product_type)
-        #st.write(f'Prediction Unit ID: {prediction_unit_id}')
-
-        filtered_data = y_true[y_true['prediction_unit_id'] == prediction_unit_id]
-
-        consumption_data = filtered_data[filtered_data['is_consumption'] == 1]
-        production_data = filtered_data[filtered_data['is_consumption'] == 0]
-
-        fig1 = create_plotly_chart(consumption_data, None, 'Graph for Consumption', 'Consumption')
-        fig2 = create_plotly_chart(production_data, None, 'Graph for Production', 'Production')
 
         progress_bar = st.empty()
         progress_emojis = ''
         total_length = 42
 
-        for i in range(total_length):
-            time.sleep(0.04)
+        # Start the progress bar with a loop
+        for i in range(int(30)):  # Start till half-way
+            time.sleep(0.025)  # Time delay for each update
             progress_emojis += ':zap:'
             progress_bar.markdown(f'<span style="font-size: 30px;">{progress_emojis}</span>', unsafe_allow_html=True)
 
-        col1, col2 = st.columns([6, 6])
+        # Fetch forecast data
+        forecast_conso, forecast_prod = predict_electricity(date_range[0], date_range[1], prediction_unit_id, selected_model)
 
-        with col1:
-            st.plotly_chart(fig1)
+        # Complete the rest of the progress bar after data is fetched
+        for i in range(30, total_length):
+            time.sleep(0.05)
+            progress_emojis += ':zap:'
+            progress_bar.markdown(f'<span style="font-size: 30px;">{progress_emojis}</span>', unsafe_allow_html=True)
 
-        with col2:
-            st.plotly_chart(fig2)
+        if forecast_conso is None or forecast_prod is None:
+            st.error("Failed to fetch forecast data.")
+        else:
+            # Filter the actual data based on the prediction unit ID
+            filtered_data = y_true[y_true['prediction_unit_id'] == prediction_unit_id]
+
+            # Separate data into consumption and production
+            consumption_data = filtered_data[filtered_data['is_consumption'] == 1]
+            production_data = filtered_data[filtered_data['is_consumption'] == 0]
+
+            # Create charts for actual vs predicted consumption and production
+            fig1 = create_plotly_chart(consumption_data, forecast_conso, 'Graph for Consumption', 'Consumption', showlegend=False)
+            fig2 = create_plotly_chart(production_data, forecast_prod, 'Graph for Production', 'Production')
+
+            col1, col2 = st.columns([6, 6])
+
+            with col1:
+                st.plotly_chart(fig1)
+
+            with col2:
+                st.plotly_chart(fig2)
 
     else:
         st.error('Please select both a start and an end date.')
