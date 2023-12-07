@@ -124,7 +124,7 @@ def create_plotly_chart(y_true, y_pred, title, y_label):
         y=y_true['target'],
         mode='lines',
         name='Actual',
-        line=dict(color='green')  
+        line=dict(color='darkblue')  
     ))
 
     if y_pred is not None:
@@ -133,26 +133,27 @@ def create_plotly_chart(y_true, y_pred, title, y_label):
             y=y_pred['target'],
             mode='lines',
             name='Predicted',
-            line=dict(color='orange')  
+            line=dict(color='red')  
         ))
 
     fig.update_layout(
         title=title,
         xaxis_title="Time",
         yaxis_title=y_label,
-        plot_bgcolor="#0D1116",  
-        paper_bgcolor="#0D1116",  
-        font=dict(color="white"),
-        title_font=dict(size=20, color="white"),
+        plot_bgcolor="white",  
+        paper_bgcolor="white",  
+        font=dict(color="black"),
+        title_font=dict(size=20, color="black"),
         title_x=0.35,
         xaxis=dict(
             showline=True,
             showgrid=True,
             showticklabels=True,
-            linecolor="white",
+            gridcolor= 'lightgrey',
+            linecolor="black",
             linewidth=2,
             ticks='outside',
-            tickfont=dict(family='Arial', size=12, color='white'),
+            tickfont=dict(family='Arial', size=12, color='black'),
             tickmode='auto',
             tickformat='%d %b',
         ),
@@ -197,7 +198,7 @@ with col4:
 if st.button('Predict'):
     if len(date_range) == 2:
         prediction_unit_id = find_pred_id(is_business, county_number, selected_product_type)
-        st.write(f'Prediction Unit ID: {prediction_unit_id}')
+        #st.write(f'Prediction Unit ID: {prediction_unit_id}')
 
         filtered_data = y_true[y_true['prediction_unit_id'] == prediction_unit_id]
 
