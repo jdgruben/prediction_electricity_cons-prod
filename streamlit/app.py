@@ -256,7 +256,7 @@ if st.button('Predict'):
             progress_bar.markdown(f'<span style="font-size: 30px;">{progress_emojis}</span>', unsafe_allow_html=True)
 
         if forecast_conso is None or forecast_prod is None:
-            st.error("🚨🤯🚨🤯🚨🤯🚨🤯🚨🤯")
+            st.error("🚨🤯🚨🤯🚨🤯🚨🤯🚨🤯🚨🤯")
         else:
             # Filter the actual data based on the prediction unit ID
             filtered_data = y_true[y_true['prediction_unit_id'] == prediction_unit_id]
